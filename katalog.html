@@ -1,0 +1,281 @@
+<!-- katalog.html --><!DOCTYPE html><html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Katalog - KasirKu.co</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white min-h-screen p-4">
+  <h1 class="text-2xl font-bold mb-4">Katalog Produk</h1>  <div class="mb-4">
+    <input type="text" id="cariProduk" placeholder="Cari produk..." class="p-2 border rounded w-full" oninput="tampilkanKatalog()" />
+  </div>  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" id="daftarProduk"></div>  <h2 class="text-xl font-semibold mb-2">Tambah Produk Baru</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-md">
+    <input type="text" id="namaBaru" placeholder="Nama Produk" class="p-2 border rounded" />
+    <input type="number" id="hargaBaru" placeholder="Harga Produk" class="p-2 border rounded" />
+    <button onclick="tambahProduk()" class="bg-blue-600 text-white p-2 rounded">Tambah</button>
+  </div>  <script>
+    let katalog = JSON.parse(localStorage.getItem('katalog') || '[]');
+
+    function tampilkanKatalog() {
+      const filter = document.getElementById('cariProduk').value.toLowerCase();
+      const daftar = document.getElementById('daftarProduk');
+      daftar.innerHTML = '';
+
+      katalog.filter(item => item.nama.toLowerCase().includes(filter)).forEach((item, i) => {
+        const card = document.createElement('div');
+        card.className = 'border rounded p-4 flex justify-between items-center bg-white dark:bg-gray-800';
+        card.innerHTML = `
+          <div>
+            <strong>${item.nama}</strong><br>
+            Rp ${item.harga}
+          </div>
+          <button onclick="hapusProduk(${i})" class="text-red-600 hover:underline">Hapus</button>
+        `;
+        daftar.appendChild(card);
+      });
+    }
+
+    function tambahProduk() {
+      const nama = document.getElementById('namaBaru').value.trim();
+      const harga = parseFloat(document.getElementById('hargaBaru').value);
+      if (!nama || !harga || harga <= 0) return alert('Isi nama dan harga dengan benar.');
+      katalog.push({ nama, harga });
+      localStorage.setItem('katalog', JSON.stringify(katalog));
+      document.getElementById('namaBaru').value = '';
+      document.getElementById('hargaBaru').value = '';
+      tampilkanKatalog();
+    }
+
+    function hapusProduk(index) {
+      if (!confirm('Hapus produk ini?')) return;
+      katalog.splice(index, 1);
+      localStorage.setItem('katalog', JSON.stringify(katalog));
+      tampilkanKatalog();
+    }
+
+    tampilkanKatalog();
+  </script></body>
+  <!-- Floating Kalkulator Universal --><div id="floatingCalc">
+  <div id="calcHeader">
+    <span>Kalkulator</span>
+    <button id="btnMinimize">−</button>
+  </div>
+  <input type="text" id="calcDisplay" readonly>
+  <div id="calcButtons">
+    <button class="num">7</button>
+    <button class="num">8</button>
+    <button class="num">9</button>
+    <button class="operator">÷</button>
+    <button class="num">4</button>
+    <button class="num">5</button>
+    <button class="num">6</button>
+    <button class="operator">×</button>
+    <button class="num">1</button>
+    <button class="num">2</button>
+    <button class="num">3</button>
+    <button class="operator">−</button>
+    <button class="num">0</button>
+    <button id="clear">C</button>
+    <button id="equals">=</button>
+    <button class="operator">+</button>
+    <button id="undo" colspan="4">Undo</button>
+  </div>
+</div>
+<div id="calcMinimized">Kalkulator</div><style>
+  #floatingCalc {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    width: 280px;
+    background: #fff;
+    border: 1px solid #888;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    font-family: Arial, sans-serif;
+    z-index: 9999;
+    user-select: none;
+  }
+  #calcHeader {
+    background: #3b82f6;
+    color: white;
+    padding: 8px;
+    cursor: grab;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  #calcDisplay {
+    width: 100%;
+    height: 40px;
+    font-size: 20px;
+    text-align: right;
+    padding: 8px;
+    border: none;
+    border-bottom: 1px solid #ddd;
+  }
+  #calcButtons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    padding: 10px;
+  }
+  #calcButtons button {
+    font-size: 18px;
+    padding: 12px 0;
+    border: none;
+    border-radius: 5px;
+    background: #f3f4f6;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  #calcButtons button:hover {
+    background: #d1d5db;
+  }
+  #calcButtons button.operator {
+    background: #3b82f6;
+    color: white;
+  }
+  #calcButtons button.operator:hover {
+    background: #2563eb;
+  }
+  #calcMinimized {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #3b82f6;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 9999;
+  }
+</style><script>
+ (function(){
+  const calc = document.getElementById('floatingCalc');
+  const display = document.getElementById('calcDisplay');
+  const btnMinimize = document.getElementById('btnMinimize');
+  const calcMinimized = document.getElementById('calcMinimized');
+  const header = document.getElementById('calcHeader');
+
+  let expression = '';
+  let undoStack = [];
+
+  // Drag support
+  let isDragging = false;
+  let offsetX = 0, offsetY = 0;
+
+  function getClientCoords(e) {
+    if (e.type.startsWith('touch')) {
+      return {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      };
+    } else {
+      return {
+        x: e.clientX,
+        y: e.clientY
+      };
+    }
+  }
+
+  function startDrag(e) {
+    // Cek kalau klik target adalah tombol di header, batal drag
+    if (e.target.closest('button')) return;
+
+    e.preventDefault();
+    const { x, y } = getClientCoords(e);
+    isDragging = true;
+    offsetX = x - calc.getBoundingClientRect().left;
+    offsetY = y - calc.getBoundingClientRect().top;
+    header.style.cursor = 'grabbing';
+  }
+
+  function doDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const { x, y } = getClientCoords(e);
+    const newX = x - offsetX;
+    const newY = y - offsetY;
+
+    // Batasi agar kalkulator tidak keluar layar (opsional)
+    const maxX = window.innerWidth - calc.offsetWidth;
+    const maxY = window.innerHeight - calc.offsetHeight;
+    calc.style.left = `${Math.min(Math.max(0, newX), maxX)}px`;
+    calc.style.top = `${Math.min(Math.max(0, newY), maxY)}px`;
+    calc.style.right = 'auto';
+    calc.style.bottom = 'auto';
+  }
+
+  function endDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    isDragging = false;
+    header.style.cursor = 'grab';
+  }
+
+  // Pasang event listener drag di header (mouse + touch)
+  header.addEventListener('mousedown', startDrag);
+  header.addEventListener('touchstart', startDrag, { passive: false });
+
+  document.addEventListener('mousemove', doDrag);
+  document.addEventListener('touchmove', doDrag, { passive: false });
+
+  document.addEventListener('mouseup', endDrag);
+  document.addEventListener('touchend', endDrag);
+
+  // Minimize / Maximize tombol
+  btnMinimize.onclick = (e) => {
+    e.stopPropagation(); // supaya tidak ikut triggering drag
+    calc.style.display = 'none';
+    calcMinimized.style.display = 'block';
+  };
+  calcMinimized.onclick = () => {
+    calc.style.display = 'block';
+    calcMinimized.style.display = 'none';
+  };
+
+  // Tombol kalkulator
+  document.querySelectorAll('#calcButtons button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.textContent;
+
+      if (btn.id === 'clear') {
+        undoStack.push(expression);
+        expression = '';
+        display.value = '';
+        return;
+      }
+      if (btn.id === 'undo') {
+        if(undoStack.length > 0) {
+          expression = undoStack.pop();
+          display.value = expression;
+        }
+        return;
+      }
+      if (btn.id === 'equals') {
+        try {
+          const exp = expression.replace(/÷/g, '/').replace(/×/g, '*').replace(/−/g, '-');
+          const result = eval(exp);
+          undoStack.push(expression);
+          expression = String(result);
+          display.value = expression;
+        } catch {
+          display.value = 'Error';
+        }
+        return;
+      }
+
+      if(btn.classList.contains('num') || btn.classList.contains('operator')) {
+        undoStack.push(expression);
+        expression += val;
+        display.value = expression;
+      }
+    });
+  });
+})();
+</script>
+</html>

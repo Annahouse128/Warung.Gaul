@@ -1,0 +1,328 @@
+<!-- laporan.html --><!DOCTYPE html><html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laporan - KasirKu.co</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white min-h-screen p-4">
+  <h1 class="text-2xl font-bold mb-4">Laporan Transaksi</h1>  <div class="mb-4">
+    <label for="filterTanggal" class="mr-2">Filter:</label>
+    <select id="filterTanggal" onchange="tampilkanLaporan()" class="p-2 border rounded">
+      <option value="harian">Harian</option>
+      <option value="mingguan">Mingguan</option>
+      <option value="bulanan">Bulanan</option>
+      <option value="sampah">Sampah</option>
+    </select>
+  </div>  <div id="laporanList" class="space-y-2 max-h-[60vh] overflow-auto border p-2 rounded bg-white dark:bg-gray-800"></div><button onclick="eksporWord()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Ekspor ke Word</button>
+
+  <script>
+    function formatDate(date) {
+      return new Date(date).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    function tampilkanLaporan() {
+      const filter = document.getElementById('filterTanggal').value;
+      let laporan = JSON.parse(localStorage.getItem('laporan') || '[]');
+      let sampah = JSON.parse(localStorage.getItem('sampah') || '[]');
+
+      let dataTampil = filter === 'sampah' ? sampah : laporan.filter(item => {
+        const tgl = new Date(item.tanggal);
+        const now = new Date();
+
+        if (filter === 'harian') {
+          return tgl.toDateString() === now.toDateString();
+        } else if (filter === 'mingguan') {
+          const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6);
+          return tgl >= startOfWeek && tgl <= endOfWeek;
+        } else if (filter === 'bulanan') {
+          return tgl.getMonth() === new Date().getMonth() && tgl.getFullYear() === new Date().getFullYear();
+        }
+        return true;
+      });
+
+      const list = document.getElementById('laporanList');
+      list.innerHTML = '';
+
+      if (dataTampil.length === 0) {
+        list.innerHTML = '<p class="text-center text-gray-500">Tidak ada data.</p>';
+        return;
+      }
+
+      dataTampil.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.className = 'flex justify-between p-2 border-b';
+        div.innerHTML = `
+          <div>
+            <strong>${item.nama}</strong> - ${item.jumlah} x Rp ${item.harga} = Rp ${item.jumlah * item.harga}<br>
+            <small>${formatDate(item.tanggal)}</small>
+          </div>
+          <button onclick="hapusLaporan(${i}, '${filter}')" class="text-red-600 hover:underline">Hapus</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function hapusLaporan(index, filter) {
+      if (filter === 'sampah') {
+        let sampah = JSON.parse(localStorage.getItem('sampah') || '[]');
+        sampah.splice(index, 1);
+        localStorage.setItem('sampah', JSON.stringify(sampah));
+      } else {
+        let laporan = JSON.parse(localStorage.getItem('laporan') || '[]');
+        let sampah = JSON.parse(localStorage.getItem('sampah') || '[]');
+        const [item] = laporan.splice(index, 1);
+        sampah.push(item);
+        localStorage.setItem('laporan', JSON.stringify(laporan));
+        localStorage.setItem('sampah', JSON.stringify(sampah));
+      }
+      tampilkanLaporan();
+    }
+
+    function eksporWord() {
+      const laporan = JSON.parse(localStorage.getItem('laporan') || '[]');
+      if (laporan.length === 0) return alert('Tidak ada data untuk diekspor.');
+
+      let content = '<h1>Laporan Transaksi KasirKu.co</h1>';
+      laporan.forEach(item => {
+        content += `<p>${item.nama} - ${item.jumlah} x Rp ${item.harga} = Rp ${item.jumlah * item.harga} (Tanggal: ${formatDate(item.tanggal)})</p>`;
+      });
+
+      const header = "data:application/vnd.ms-word;charset=utf-8,";
+      const sourceHTML = `<!DOCTYPE html><html><head><meta charset='utf-8'><title>Laporan</title></head><body>${content}</body></html>`;
+      const source = header + encodeURIComponent(sourceHTML);
+
+      const link = document.createElement('a');
+      link.href = source;
+      link.download = `laporan_kasirku_${new Date().toISOString().slice(0,10)}.doc`;
+      link.click();
+    }
+
+    tampilkanLaporan();
+  </script></body>
+  <!-- Floating Kalkulator Universal --><div id="floatingCalc">
+  <div id="calcHeader">
+    <span>Kalkulator</span>
+    <button id="btnMinimize">−</button>
+  </div>
+  <input type="text" id="calcDisplay" readonly>
+  <div id="calcButtons">
+    <button class="num">7</button>
+    <button class="num">8</button>
+    <button class="num">9</button>
+    <button class="operator">÷</button>
+    <button class="num">4</button>
+    <button class="num">5</button>
+    <button class="num">6</button>
+    <button class="operator">×</button>
+    <button class="num">1</button>
+    <button class="num">2</button>
+    <button class="num">3</button>
+    <button class="operator">−</button>
+    <button class="num">0</button>
+    <button id="clear">C</button>
+    <button id="equals">=</button>
+    <button class="operator">+</button>
+    <button id="undo" colspan="4">Undo</button>
+  </div>
+</div>
+<div id="calcMinimized">Kalkulator</div><style>
+  #floatingCalc {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    width: 280px;
+    background: #fff;
+    border: 1px solid #888;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    font-family: Arial, sans-serif;
+    z-index: 9999;
+    user-select: none;
+  }
+  #calcHeader {
+    background: #3b82f6;
+    color: white;
+    padding: 8px;
+    cursor: grab;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  #calcDisplay {
+    width: 100%;
+    height: 40px;
+    font-size: 20px;
+    text-align: right;
+    padding: 8px;
+    border: none;
+    border-bottom: 1px solid #ddd;
+  }
+  #calcButtons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    padding: 10px;
+  }
+  #calcButtons button {
+    font-size: 18px;
+    padding: 12px 0;
+    border: none;
+    border-radius: 5px;
+    background: #f3f4f6;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  #calcButtons button:hover {
+    background: #d1d5db;
+  }
+  #calcButtons button.operator {
+    background: #3b82f6;
+    color: white;
+  }
+  #calcButtons button.operator:hover {
+    background: #2563eb;
+  }
+  #calcMinimized {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #3b82f6;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 9999;
+  }
+</style><script>
+(function(){
+  const calc = document.getElementById('floatingCalc');
+  const display = document.getElementById('calcDisplay');
+  const btnMinimize = document.getElementById('btnMinimize');
+  const calcMinimized = document.getElementById('calcMinimized');
+  const header = document.getElementById('calcHeader');
+
+  let expression = '';
+  let undoStack = [];
+
+  // Drag support
+  let isDragging = false;
+  let offsetX = 0, offsetY = 0;
+
+  function getClientCoords(e) {
+    if (e.type.startsWith('touch')) {
+      return {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      };
+    } else {
+      return {
+        x: e.clientX,
+        y: e.clientY
+      };
+    }
+  }
+
+  function startDrag(e) {
+    // Cek kalau klik target adalah tombol di header, batal drag
+    if (e.target.closest('button')) return;
+
+    e.preventDefault();
+    const { x, y } = getClientCoords(e);
+    isDragging = true;
+    offsetX = x - calc.getBoundingClientRect().left;
+    offsetY = y - calc.getBoundingClientRect().top;
+    header.style.cursor = 'grabbing';
+  }
+
+  function doDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const { x, y } = getClientCoords(e);
+    const newX = x - offsetX;
+    const newY = y - offsetY;
+
+    // Batasi agar kalkulator tidak keluar layar (opsional)
+    const maxX = window.innerWidth - calc.offsetWidth;
+    const maxY = window.innerHeight - calc.offsetHeight;
+    calc.style.left = `${Math.min(Math.max(0, newX), maxX)}px`;
+    calc.style.top = `${Math.min(Math.max(0, newY), maxY)}px`;
+    calc.style.right = 'auto';
+    calc.style.bottom = 'auto';
+  }
+
+  function endDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    isDragging = false;
+    header.style.cursor = 'grab';
+  }
+
+  // Pasang event listener drag di header (mouse + touch)
+  header.addEventListener('mousedown', startDrag);
+  header.addEventListener('touchstart', startDrag, { passive: false });
+
+  document.addEventListener('mousemove', doDrag);
+  document.addEventListener('touchmove', doDrag, { passive: false });
+
+  document.addEventListener('mouseup', endDrag);
+  document.addEventListener('touchend', endDrag);
+
+  // Minimize / Maximize tombol
+  btnMinimize.onclick = (e) => {
+    e.stopPropagation(); // supaya tidak ikut triggering drag
+    calc.style.display = 'none';
+    calcMinimized.style.display = 'block';
+  };
+  calcMinimized.onclick = () => {
+    calc.style.display = 'block';
+    calcMinimized.style.display = 'none';
+  };
+
+  // Tombol kalkulator
+  document.querySelectorAll('#calcButtons button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.textContent;
+
+      if (btn.id === 'clear') {
+        undoStack.push(expression);
+        expression = '';
+        display.value = '';
+        return;
+      }
+      if (btn.id === 'undo') {
+        if(undoStack.length > 0) {
+          expression = undoStack.pop();
+          display.value = expression;
+        }
+        return;
+      }
+      if (btn.id === 'equals') {
+        try {
+          const exp = expression.replace(/÷/g, '/').replace(/×/g, '*').replace(/−/g, '-');
+          const result = eval(exp);
+          undoStack.push(expression);
+          expression = String(result);
+          display.value = expression;
+        } catch {
+          display.value = 'Error';
+        }
+        return;
+      }
+
+      if(btn.classList.contains('num') || btn.classList.contains('operator')) {
+        undoStack.push(expression);
+        expression += val;
+        display.value = expression;
+      }
+    });
+  });
+})();
+</script>
+</html>
